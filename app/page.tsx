@@ -630,9 +630,7 @@ function FactionLogoCard({
           <div className="absolute right-0 top-0 h-56 w-56 rounded-full bg-black/24 blur-3xl" />
         </div>
 
-        <div className="absolute left-5 top-5 rounded-full bg-black/78 px-3 py-1 text-[11px] font-bold tracking-[0.24em] text-white">
-          FACTION LOGO CARD
-        </div>
+       
         <div className="absolute right-5 top-5 rounded-full border border-white/25 bg-black/28 px-3 py-1 text-xs font-semibold text-white">
           匹配度 {confidence}%
         </div>
