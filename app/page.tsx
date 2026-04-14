@@ -1,14 +1,87 @@
 "use client";
+
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Share2, Sparkles, RotateCcw, ArrowRight, CheckCircle2, Crown, Flame } from "lucide-react";
-import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
+import {
+  Share2,
+  Sparkles,
+  RotateCcw,
+  ArrowRight,
+  CheckCircle2,
+  Crown,
+  Flame,
+} from "lucide-react";
+import {
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  Radar,
+} from "recharts";
 
-const axes = {
+type AxisKey = "V" | "R" | "C" | "F" | "D" | "S" | "A" | "M";
+type FactionKey = "VC" | "VF" | "RC" | "RF";
+type Scores = Record<AxisKey, number>;
+
+type Option = {
+  text: string;
+  scores: Partial<Scores>;
+};
+
+type Question = {
+  id: number;
+  title: string;
+  subtitle: string;
+  options: Option[];
+};
+
+type Profile = {
+  title: string;
+  tone: string;
+  tags: string[];
+  guide: string[];
+  socialCopy: string;
+};
+
+type FactionInfo = {
+  name: string;
+  short: string;
+  slogan: string;
+  tone: string;
+  tags: string[];
+  colors: {
+    bg: string;
+    panel: string;
+    primary: string;
+    secondary: string;
+    ink: string;
+  };
+};
+
+type FactionLogoCardProps = {
+  code: string;
+  title: string;
+  tone: string;
+  confidence: number;
+  bossLook: string[];
+};
+
+type RadarRowProps = {
+  label: string;
+  value: number;
+};
+
+const axes: Record<AxisKey, string> = {
   V: "愿景型",
   R: "营收型",
   C: "控制型",
@@ -19,14 +92,14 @@ const axes = {
   M: "开会型",
 };
 
-const axisPairs = [
+const axisPairs: Array<[AxisKey, AxisKey]> = [
   ["V", "R"],
   ["C", "F"],
   ["D", "S"],
   ["A", "M"],
 ];
 
-const questions = [
+const questions: Question[] = [
   {
     id: 1,
     title: "一个新项目刚开始，你最先抓什么？",
@@ -425,7 +498,7 @@ const questions = [
   },
 ];
 
-const factionMap = {
+const factionMap: Record<FactionKey, FactionInfo> = {
   VC: {
     name: "天命统治派",
     short: "VC 阵营",
@@ -437,8 +510,8 @@ const factionMap = {
       panel: "from-red-950/82 to-orange-950/28",
       primary: "#f59e0b",
       secondary: "#7c2d12",
-      ink: "#111827"
-    }
+      ink: "#111827",
+    },
   },
   VF: {
     name: "理想游牧派",
@@ -451,8 +524,8 @@ const factionMap = {
       panel: "from-emerald-950/80 to-cyan-950/28",
       primary: "#14b8a6",
       secondary: "#065f46",
-      ink: "#083344"
-    }
+      ink: "#083344",
+    },
   },
   RC: {
     name: "铁血绩效派",
@@ -465,8 +538,8 @@ const factionMap = {
       panel: "from-slate-950/84 to-amber-950/26",
       primary: "#f59e0b",
       secondary: "#334155",
-      ink: "#0f172a"
-    }
+      ink: "#0f172a",
+    },
   },
   RF: {
     name: "掌柜经营派",
@@ -479,12 +552,12 @@ const factionMap = {
       panel: "from-cyan-950/82 to-indigo-950/26",
       primary: "#0ea5e9",
       secondary: "#164e63",
-      ink: "#082f49"
-    }
-  }
+      ink: "#082f49",
+    },
+  },
 };
 
-const profileMap = {
+const profileMap: Record<string, Profile> = {
   VCDA: {
     title: "控场指挥型 BOSS",
     tone: "你兼具方向驱动、组织控制、现场推动和行动执行能力。适合在目标清晰但节奏紧张的场景下快速统一方向。",
@@ -663,7 +736,27 @@ const profileMap = {
   },
 };
 
-function getDominance(scores, a, b) {
+function getFaction(code: string): FactionKey {
+  const key = code.slice(0, 2) as FactionKey;
+  return ["VC", "VF", "RC", "RF"].includes(key) ? key : "RF";
+}
+
+function getFactionLogoMeta(code: string) {
+  const factionKey = getFaction(code);
+  const faction = factionMap[factionKey];
+  const meta: Record<
+    FactionKey,
+    { icon: string; shape: string; accentWord: string }
+  > = {
+    VC: { icon: "crown_shield", shape: "shield", accentWord: "DOMINION" },
+    VF: { icon: "compass_banner", shape: "circle", accentWord: "VISION" },
+    RC: { icon: "sword_grid", shape: "diamond", accentWord: "RESULT" },
+    RF: { icon: "coin_gate", shape: "hex", accentWord: "BALANCE" },
+  };
+  return { ...faction, ...meta[factionKey], key: factionKey };
+}
+
+function getDominance(scores: Scores, a: AxisKey, b: AxisKey) {
   const total = scores[a] + scores[b] || 1;
   const gap = Math.abs(scores[a] - scores[b]);
   return {
@@ -674,19 +767,32 @@ function getDominance(scores, a, b) {
   };
 }
 
-function buildScores(answers) {
-  const total = { V: 0, R: 0, C: 0, F: 0, D: 0, S: 0, A: 0, M: 0 };
+function buildScores(answers: Array<number | null>): Scores {
+  const total: Scores = {
+    V: 0,
+    R: 0,
+    C: 0,
+    F: 0,
+    D: 0,
+    S: 0,
+    A: 0,
+    M: 0,
+  };
+
   answers.forEach((answerIndex, qIndex) => {
-    if (answerIndex === null || answerIndex === undefined) return;
-    const scores = questions[qIndex].options[answerIndex].scores;
-    Object.entries(scores).forEach(([k, v]) => {
-      total[k] += v;
+    if (answerIndex === null) return;
+    const option = questions[qIndex]?.options[answerIndex];
+    if (!option) return;
+
+    Object.entries(option.scores).forEach(([k, v]) => {
+      total[k as AxisKey] += v ?? 0;
     });
   });
+
   return total;
 }
 
-function getCode(scores) {
+function getCode(scores: Scores) {
   const first = scores.V >= scores.R ? "V" : "R";
   const second = scores.C >= scores.F ? "C" : "F";
   const third = scores.D >= scores.S ? "D" : "S";
@@ -694,63 +800,81 @@ function getCode(scores) {
   return `${first}${second}${third}${fourth}`;
 }
 
-function getConfidence(scores) {
+function getConfidence(scores: Scores) {
   const pairs = axisPairs.map(([a, b]) => getDominance(scores, a, b));
   const avg = pairs.reduce((sum, item) => sum + item.strength, 0) / pairs.length;
   return Math.max(60, Math.min(97, Math.round(64 + avg * 33)));
 }
 
-function getStrengthLabel(gap) {
+function getStrengthLabel(gap: number) {
   if (gap >= 10) return "非常明显";
   if (gap >= 6) return "较明显";
   if (gap >= 3) return "中等";
   return "轻度";
 }
 
-function getLeadershipCore(scores) {
+function getLeadershipCore(scores: Scores) {
   const vr = getDominance(scores, "V", "R");
   const cf = getDominance(scores, "C", "F");
   const ds = getDominance(scores, "D", "S");
   const am = getDominance(scores, "A", "M");
 
-  const p1 = vr.winner === "V"
-    ? `${getStrengthLabel(vr.gap)}愿景驱动。你在判断事情时更先看方向、长期意义和未来位置。`
-    : `${getStrengthLabel(vr.gap)}营收驱动。你更关注结果、回报和业务闭环。`;
+  const p1 =
+    vr.winner === "V"
+      ? `${getStrengthLabel(vr.gap)}愿景驱动。你在判断事情时更先看方向、长期意义和未来位置。`
+      : `${getStrengthLabel(vr.gap)}营收驱动。你更关注结果、回报和业务闭环。`;
 
-  const p2 = cf.winner === "C"
-    ? `${getStrengthLabel(cf.gap)}控制倾向。你更重视统一标准、过程可控和关键节点的管理掌握。`
-    : `${getStrengthLabel(cf.gap)}放权倾向。你更愿意让团队在明确目标下自主成长和独立判断。`;
+  const p2 =
+    cf.winner === "C"
+      ? `${getStrengthLabel(cf.gap)}控制倾向。你更重视统一标准、过程可控和关键节点的管理掌握。`
+      : `${getStrengthLabel(cf.gap)}放权倾向。你更愿意让团队在明确目标下自主成长和独立判断。`;
 
-  const p3 = ds.winner === "D"
-    ? `${getStrengthLabel(ds.gap)}戏剧张力。你的存在感、表达力度和现场影响力会明显进入组织氛围。`
-    : `${getStrengthLabel(ds.gap)}稳定倾向。你更偏向控节奏、压波动和建立可预期的推进环境。`;
+  const p3 =
+    ds.winner === "D"
+      ? `${getStrengthLabel(ds.gap)}戏剧张力。你的存在感、表达力度和现场影响力会明显进入组织氛围。`
+      : `${getStrengthLabel(ds.gap)}稳定倾向。你更偏向控节奏、压波动和建立可预期的推进环境。`;
 
-  const p4 = am.winner === "A"
-    ? `${getStrengthLabel(am.gap)}行动倾向。你更相信先动起来，再在动作中修正。`
-    : `${getStrengthLabel(am.gap)}对齐倾向。你更相信先讲清楚，再组织推进。`;
+  const p4 =
+    am.winner === "A"
+      ? `${getStrengthLabel(am.gap)}行动倾向。你更相信先动起来，再在动作中修正。`
+      : `${getStrengthLabel(am.gap)}对齐倾向。你更相信先讲清楚，再组织推进。`;
 
   return `${p1}${p2}${p3}${p4}`;
 }
 
-function getTeamExperience(scores) {
+function getTeamExperience(scores: Scores) {
   const vr = getDominance(scores, "V", "R");
   const cf = getDominance(scores, "C", "F");
   const ds = getDominance(scores, "D", "S");
   const am = getDominance(scores, "A", "M");
 
   let sentence = "团队通常会感受到：你属于";
-  sentence += cf.winner === "C" ? "边界更清楚、管理参与度更高的负责人，" : "更愿意给空间、强调自驱的负责人，";
-  sentence += ds.winner === "D" ? "你的现场影响力较强，" : "你的稳定感和可预期性较强，";
-  sentence += am.winner === "A" ? "整体推进节奏偏快，" : "前期对齐和认知同步会更充分，";
-  sentence += vr.winner === "V"
-    ? "同时你会反复把大家拉回长期方向和意义。"
-    : "同时你会持续把大家拉回结果和业务目标。";
+  sentence +=
+    cf.winner === "C"
+      ? "边界更清楚、管理参与度更高的负责人，"
+      : "更愿意给空间、强调自驱的负责人，";
+  sentence +=
+    ds.winner === "D"
+      ? "你的现场影响力较强，"
+      : "你的稳定感和可预期性较强，";
+  sentence +=
+    am.winner === "A"
+      ? "整体推进节奏偏快，"
+      : "前期对齐和认知同步会更充分，";
+  sentence +=
+    vr.winner === "V"
+      ? "同时你会反复把大家拉回长期方向和意义。"
+      : "同时你会持续把大家拉回结果和业务目标。";
+
   return sentence;
 }
 
-function getBlindSpot(scores) {
-  const top = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
-  const map = {
+function getBlindSpot(scores: Scores) {
+  const top = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0] as
+    | AxisKey
+    | undefined;
+
+  const map: Record<AxisKey, string> = {
     V: "你可能容易把方向感表达得过于完整，从而让团队低估实际执行的不确定性。",
     R: "你可能容易把结果语言放在过高优先级，导致过程信息和风险暴露不足。",
     C: "你可能容易在关键节点收回过多管理权，影响团队独立成长。",
@@ -760,25 +884,38 @@ function getBlindSpot(scores) {
     A: "你可能容易过快进入动作，从而让前置共识不足。",
     M: "你可能容易在讨论和校准中投入过多时间，影响推进效率。",
   };
-  return map[top];
+
+  return top ? map[top] : "你的结果整体较为均衡，主要盲区不算特别集中。";
 }
 
-function getIdealTeam(scores) {
+function getIdealTeam(scores: Scores) {
   const vr = getDominance(scores, "V", "R");
   const cf = getDominance(scores, "C", "F");
   const ds = getDominance(scores, "D", "S");
   const am = getDominance(scores, "A", "M");
 
-  const a = cf.winner === "C" ? "能理解标准、愿意在边界内高质量执行" : "成熟自驱、可以独立承担任务闭环";
-  const b = ds.winner === "D" ? "能适应较强的现场影响力与节奏变化" : "节奏稳定、不容易被波动打断";
-  const c = am.winner === "A" ? "动作快、反馈快、对试错有适应力" : "逻辑清楚、能承接对齐和复杂协同";
-  const d = vr.winner === "V" ? "愿意理解长期方向与组织意义" : "对结果和业务目标保持敏感";
+  const a =
+    cf.winner === "C"
+      ? "能理解标准、愿意在边界内高质量执行"
+      : "成熟自驱、可以独立承担任务闭环";
+  const b =
+    ds.winner === "D"
+      ? "能适应较强的现场影响力与节奏变化"
+      : "节奏稳定、不容易被波动打断";
+  const c =
+    am.winner === "A"
+      ? "动作快、反馈快、对试错有适应力"
+      : "逻辑清楚、能承接对齐和复杂协同";
+  const d =
+    vr.winner === "V"
+      ? "愿意理解长期方向与组织意义"
+      : "对结果和业务目标保持敏感";
 
   return `你比较适配的团队通常具备这些特征：${a}、${b}、${c}，并且${d}。当这些条件同时出现时，你的管理优势会发挥得更完整。`;
 }
 
-function getFlipRisk(code) {
-  const riskMap = {
+function getFlipRisk(code: string) {
+  const riskMap: Record<string, string> = {
     VCDA: "需要注意在高标准与高速度并行时，避免组织对你形成过度依赖。",
     VCDM: "需要注意讨论充分时，别让关键行动被持续延后。",
     VCSA: "需要注意高驱动场景下的团队续航与节奏恢复。",
@@ -796,27 +933,12 @@ function getFlipRisk(code) {
     RFSA: "需要注意低调风格之下，关键判断仍要适度显性表达。",
     RFSM: "需要注意长期松弛经营中保留足够的关键时刻推动力。",
   };
-  return riskMap[code] || riskMap.RFSA;
+
+  return riskMap[code] ?? "请重点关注节奏、边界和组织沟通的一致性。";
 }
 
-function getFaction(code) {
-  return code ? code.slice(0, 2) : "";
-}
-
-function getFactionLogoMeta(code) {
-  const factionKey = getFaction(code);
-  const faction = factionMap[factionKey] || factionMap.RF;
-  const meta = {
-    VC: { icon: "crown_shield", shape: "shield", accentWord: "DOMINION" },
-    VF: { icon: "compass_banner", shape: "circle", accentWord: "VISION" },
-    RC: { icon: "sword_grid", shape: "diamond", accentWord: "RESULT" },
-    RF: { icon: "coin_gate", shape: "hex", accentWord: "BALANCE" },
-  };
-  return { ...faction, ...(meta[factionKey] || meta.RF), key: factionKey };
-}
-
-function getBossLook(code) {
-  const map = {
+function getBossLook(code: string) {
+  const map: Record<string, string[]> = {
     VCDA: ["方向清晰", "控制力高", "推进迅速", "标准明确"],
     VCDM: ["善于统筹", "认知整合", "愿景表达强", "组织协调度高"],
     VCSA: ["驱动力强", "行动速度快", "现场感明显", "目标聚焦"],
@@ -834,14 +956,23 @@ function getBossLook(code) {
     RFSA: ["低调务实", "合作稳定", "交付可靠", "风格克制"],
     RFSM: ["长期主义", "经营稳定", "边界清楚", "低波动管理"],
   };
-  return map[code] || map.RFSA;
+
+  return map[code] ?? ["管理清晰", "风格稳定", "注重协同", "结果明确"];
 }
 
-function FactionLogoCard({ code, title, tone, confidence, bossLook }) {
+function FactionLogoCard({
+  code,
+  title,
+  tone,
+  confidence,
+  bossLook,
+}: FactionLogoCardProps) {
   const faction = getFactionLogoMeta(code);
 
   return (
-    <div className={`relative overflow-hidden rounded-[30px] bg-gradient-to-br ${faction.bg} p-1 shadow-[0_24px_80px_rgba(15,23,42,0.24)]`}>
+    <div
+      className={`relative overflow-hidden rounded-[30px] bg-gradient-to-br ${faction.colors.bg ?? faction.bg} p-1 shadow-[0_24px_80px_rgba(15,23,42,0.24)]`}
+    >
       <div className="relative overflow-hidden rounded-[26px] bg-black/10">
         <div className="absolute inset-0 opacity-70">
           <div className="absolute -left-12 top-8 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
@@ -861,7 +992,10 @@ function FactionLogoCard({ code, title, tone, confidence, bossLook }) {
 
         <div className="relative grid min-h-[320px] gap-0 md:min-h-[360px] md:grid-cols-[0.9fr_1.1fr]">
           <div className="relative flex items-center justify-center bg-black/12 p-4 sm:p-6 md:p-8">
-            <svg viewBox="0 0 360 320" className="h-[220px] w-full max-w-[260px] drop-shadow-[0_18px_32px_rgba(0,0,0,0.22)] sm:h-[260px] sm:max-w-[300px] md:h-[300px] md:max-w-[340px]">
+            <svg
+              viewBox="0 0 360 320"
+              className="h-[220px] w-full max-w-[260px] drop-shadow-[0_18px_32px_rgba(0,0,0,0.22)] sm:h-[260px] sm:max-w-[300px] md:h-[300px] md:max-w-[340px]"
+            >
               <defs>
                 <linearGradient id="logoGlowStrong" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%" stopColor="rgba(255,255,255,1)" />
@@ -873,21 +1007,48 @@ function FactionLogoCard({ code, title, tone, confidence, bossLook }) {
               <circle cx="160" cy="150" r="70" fill="rgba(255,255,255,0.14)" />
 
               {faction.shape === "shield" && (
-                <path d="M160 72 L228 98 L218 176 Q210 226 160 252 Q110 226 102 176 L92 98 Z" fill="rgba(15,23,42,0.82)" stroke="url(#logoGlowStrong)" strokeWidth="6" />
+                <path
+                  d="M160 72 L228 98 L218 176 Q210 226 160 252 Q110 226 102 176 L92 98 Z"
+                  fill="rgba(15,23,42,0.82)"
+                  stroke="url(#logoGlowStrong)"
+                  strokeWidth="6"
+                />
               )}
               {faction.shape === "circle" && (
-                <circle cx="160" cy="152" r="84" fill="rgba(6,95,70,0.72)" stroke="url(#logoGlowStrong)" strokeWidth="6" />
+                <circle
+                  cx="160"
+                  cy="152"
+                  r="84"
+                  fill="rgba(6,95,70,0.72)"
+                  stroke="url(#logoGlowStrong)"
+                  strokeWidth="6"
+                />
               )}
               {faction.shape === "diamond" && (
-                <path d="M160 62 L246 152 L160 242 L74 152 Z" fill="rgba(15,23,42,0.82)" stroke="url(#logoGlowStrong)" strokeWidth="6" />
+                <path
+                  d="M160 62 L246 152 L160 242 L74 152 Z"
+                  fill="rgba(15,23,42,0.82)"
+                  stroke="url(#logoGlowStrong)"
+                  strokeWidth="6"
+                />
               )}
               {faction.shape === "hex" && (
-                <path d="M116 82 H204 L248 152 L204 222 H116 L72 152 Z" fill="rgba(8,47,73,0.82)" stroke="url(#logoGlowStrong)" strokeWidth="6" />
+                <path
+                  d="M116 82 H204 L248 152 L204 222 H116 L72 152 Z"
+                  fill="rgba(8,47,73,0.82)"
+                  stroke="url(#logoGlowStrong)"
+                  strokeWidth="6"
+                />
               )}
 
               {faction.icon === "crown_shield" && (
                 <g>
-                  <path d="M124 124 L138 98 L154 124 L170 92 L186 124 L202 98 L216 124 L216 140 L124 140 Z" fill={faction.colors.primary} stroke="#fff7ed" strokeWidth="4" />
+                  <path
+                    d="M124 124 L138 98 L154 124 L170 92 L186 124 L202 98 L216 124 L216 140 L124 140 Z"
+                    fill={faction.colors.primary}
+                    stroke="#fff7ed"
+                    strokeWidth="4"
+                  />
                   <path d="M126 170 H194" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
                   <path d="M140 190 H180" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
                 </g>
@@ -895,37 +1056,89 @@ function FactionLogoCard({ code, title, tone, confidence, bossLook }) {
               {faction.icon === "compass_banner" && (
                 <g>
                   <circle cx="160" cy="150" r="40" fill="none" stroke="#ecfeff" strokeWidth="6" />
-                  <path d="M160 104 L176 150 L160 196 L144 150 Z" fill={faction.colors.primary} stroke="#ecfeff" strokeWidth="4" />
-                  <path d="M210 112 Q232 126 224 154 Q214 174 190 176" fill="none" stroke="#ecfeff" strokeWidth="5" strokeLinecap="round" />
+                  <path
+                    d="M160 104 L176 150 L160 196 L144 150 Z"
+                    fill={faction.colors.primary}
+                    stroke="#ecfeff"
+                    strokeWidth="4"
+                  />
+                  <path
+                    d="M210 112 Q232 126 224 154 Q214 174 190 176"
+                    fill="none"
+                    stroke="#ecfeff"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                  />
                 </g>
               )}
               {faction.icon === "sword_grid" && (
                 <g>
-                  <path d="M160 96 L174 128 L160 208 L146 128 Z" fill="#e2e8f0" stroke="#fff" strokeWidth="3" />
-                  <path d="M134 132 H186" stroke={faction.colors.primary} strokeWidth="8" strokeLinecap="round" />
+                  <path
+                    d="M160 96 L174 128 L160 208 L146 128 Z"
+                    fill="#e2e8f0"
+                    stroke="#fff"
+                    strokeWidth="3"
+                  />
+                  <path
+                    d="M134 132 H186"
+                    stroke={faction.colors.primary}
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                  />
                   <path d="M116 176 H204 M116 200 H204" stroke="#f8fafc" strokeWidth="5" opacity="0.98" />
                 </g>
               )}
               {faction.icon === "coin_gate" && (
                 <g>
-                  <circle cx="160" cy="128" r="24" fill={faction.colors.primary} stroke="#fff7ed" strokeWidth="4" />
+                  <circle
+                    cx="160"
+                    cy="128"
+                    r="24"
+                    fill={faction.colors.primary}
+                    stroke="#fff7ed"
+                    strokeWidth="4"
+                  />
                   <rect x="152" y="120" width="16" height="16" rx="2" fill={faction.colors.secondary} />
-                  <path d="M118 200 Q160 150 202 200" fill="none" stroke="#f8fafc" strokeWidth="8" strokeLinecap="round" />
-                  <path d="M132 200 V224 H188 V200" fill="none" stroke="#f8fafc" strokeWidth="8" strokeLinecap="round" />
+                  <path
+                    d="M118 200 Q160 150 202 200"
+                    fill="none"
+                    stroke="#f8fafc"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M132 200 V224 H188 V200"
+                    fill="none"
+                    stroke="#f8fafc"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                  />
                 </g>
               )}
 
-              <text x="160" y="268" textAnchor="middle" fill="rgba(255,255,255,0.98)" fontSize="20" fontWeight="800" letterSpacing="4">
+              <text
+                x="160"
+                y="268"
+                textAnchor="middle"
+                fill="rgba(255,255,255,0.98)"
+                fontSize="20"
+                fontWeight="800"
+                letterSpacing="4"
+              >
                 {faction.accentWord}
               </text>
             </svg>
           </div>
 
-          <div className={`relative flex flex-col justify-between bg-gradient-to-b ${faction.panel} p-4 text-white sm:p-6 md:p-8`}>
+          <div className={`relative flex flex-col justify-between bg-gradient-to-b ${faction.colors.panel ?? faction.panel} p-4 text-white sm:p-6 md:p-8`}>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.28em] text-white/82">FACTION-STYLE BOSS PROFILE</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.28em] text-white/82">
+                FACTION-STYLE BOSS PROFILE
+              </div>
               <div className="mt-4 flex flex-wrap items-end gap-3">
-                <h3 className="text-2xl font-black leading-tight text-white sm:text-3xl md:text-4xl">{title}</h3>
+                <h3 className="text-2xl font-black leading-tight text-white sm:text-3xl md:text-4xl">
+                  {title}
+                </h3>
                 <span
                   className="rounded-full border border-white/35 bg-white/92 px-3 py-1 text-sm font-bold shadow-sm"
                   style={{ color: faction.colors.ink }}
@@ -933,7 +1146,9 @@ function FactionLogoCard({ code, title, tone, confidence, bossLook }) {
                   {code}
                 </span>
               </div>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-white md:text-base md:leading-7">{tone}</p>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-white md:text-base md:leading-7">
+                {tone}
+              </p>
             </div>
 
             <div className="mt-6 space-y-5">
@@ -980,7 +1195,7 @@ function FactionLogoCard({ code, title, tone, confidence, bossLook }) {
   );
 }
 
-function RadarRow({ label, value }) {
+function RadarRow({ label, value }: RadarRowProps) {
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-sm">
@@ -995,7 +1210,7 @@ function RadarRow({ label, value }) {
 export default function BOSSTIApp() {
   const [started, setStarted] = useState(false);
   const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState(Array(questions.length).fill(null));
+  const [answers, setAnswers] = useState<Array<number | null>>(Array(questions.length).fill(null));
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
@@ -1005,10 +1220,10 @@ export default function BOSSTIApp() {
 
   const scores = useMemo(() => buildScores(answers), [answers]);
   const code = useMemo(() => (isComplete ? getCode(scores) : ""), [isComplete, scores]);
-  const result = useMemo(() => (code ? profileMap[code] : null), [code]);
+  const result = useMemo(() => (code ? profileMap[code] : undefined), [code]);
   const confidence = useMemo(() => getConfidence(scores), [scores]);
   const bossLook = useMemo(() => (code ? getBossLook(code) : []), [code]);
-  const faction = useMemo(() => (code ? factionMap[getFaction(code)] : null), [code]);
+  const faction = useMemo(() => (code ? factionMap[getFaction(code)] : undefined), [code]);
 
   const radarData = [
     { subject: "愿景 V", value: scores.V },
@@ -1035,46 +1250,24 @@ export default function BOSSTIApp() {
   const dimensionText = code
     ? code
         .split("")
-        .map((letter) => `${letter} - ${axes[letter]}`)
+        .map((letter) => `${letter} - ${axes[letter as AxisKey]}`)
         .join("\n")
     : "";
 
   const detailText = dynamicAnalysis
-    ? `你是怎么当 BOSS 的：${dynamicAnalysis.core}
-
-团队怎么感受你：${dynamicAnalysis.team}
-
-你的主要盲区：${dynamicAnalysis.blind}
-
-适配团队：${dynamicAnalysis.fit}
-
-需要重点关注的风险：${dynamicAnalysis.risk}`
+    ? `你的管理核心：${dynamicAnalysis.core}\n\n团队感知：${dynamicAnalysis.team}\n\n主要盲区：${dynamicAnalysis.blind}\n\n适配团队：${dynamicAnalysis.fit}\n\n重点关注风险：${dynamicAnalysis.risk}`
     : "";
 
-  const resultText = result
-    ? `BOSSTI：${code} ${result.title}
+  const resultText =
+    result && faction
+      ? `BOSSTI：${code} ${result.title}\n\n匹配度：${confidence}%\n\n${result.tone}\n\n所属派系：${faction.name}｜${faction.slogan}\n\n关键词：\n${bossLook
+          .map((item, i) => `${i + 1}. ${item}`)
+          .join("\n")}\n\n维度说明：\n${dimensionText}\n\n${detailText}\n\n建议：\n${result.guide
+          .map((g, i) => `${i + 1}. ${g}`)
+          .join("\n")}\n\n结果摘要：${result.socialCopy}`
+      : "";
 
-匹配度：${confidence}%
-
-${result.tone}
-
-所属派系：${factionMap[getFaction(code)]?.name}｜${factionMap[getFaction(code)]?.slogan}
-
-关键词：
-${bossLook.map((item, i) => `${i + 1}. ${item}`).join("\n")}
-
-维度说明：
-${dimensionText}
-
-${detailText}
-
-建议：
-${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
-
-结果摘要：${result.socialCopy}`
-    : "";
-
-  const selectOption = (optionIndex) => {
+  const selectOption = (optionIndex: number) => {
     const next = [...answers];
     next[step] = optionIndex;
     setAnswers(next);
@@ -1082,11 +1275,11 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
   };
 
   const restart = () => {
-    setAnswers(Array(questions.length).fill(null));
+    setStarted(false);
     setStep(0);
+    setAnswers(Array(questions.length).fill(null));
     setCopied(false);
     setLinkCopied(false);
-    setStarted(false);
   };
 
   const copyResult = async () => {
@@ -1094,37 +1287,44 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
       await navigator.clipboard.writeText(resultText);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   };
 
   const copyShareLink = async () => {
     try {
-      const url = window.location.href;
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(window.location.href);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 1600);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   };
+
+  if (!currentQuestion && !isComplete) return null;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.18),_transparent_30%),radial-gradient(circle_at_right,_rgba(239,68,68,0.14),_transparent_24%),linear-gradient(180deg,#fafaf9_0%,#fff7ed_100%)] px-3 py-4 sm:px-4 md:p-8">
       <div className="mx-auto max-w-5xl space-y-4 md:space-y-6">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-[28px] border border-white/60 bg-white/90 p-6 shadow-xl backdrop-blur">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-[28px] border border-white/60 bg-white/90 p-6 shadow-xl backdrop-blur"
+        >
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg">
               <Crown className="h-6 w-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl md:text-4xl">BOSSTI</h1>
+                <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl md:text-4xl">
+                  BOSSTI
+                </h1>
                 <Badge className="rounded-full px-3 py-1 text-xs">36 题正式版 · 16 型 BOSS 测评</Badge>
               </div>
               <p className="mt-1 text-sm leading-6 text-slate-600 md:text-base">
-                这是一版更适合正式对外使用的 BOSSTI 测评。题目扩展为 36 道，结果解释采用更专业、清晰、稳定的测评表达，适合用户自测与客户测评场景。
+                一份适合对外使用的娱乐型管理风格评估。通过 36 道题目，从四组核心维度识别你的 16 型风格与派系位置。
               </p>
             </div>
           </div>
@@ -1132,7 +1332,7 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
           <div className="mt-5 grid gap-3 md:grid-cols-3">
             {[
               "36 道题，稳定区分 16 种 BOSSTI 类型",
-              "四组核心维度：愿景/营收、控制/放权、戏剧/稳定、开干/开会",
+              "核心维度：愿景/营收、控制/放权、戏剧/稳定、开干/开会",
               "采用派系 Logo 标志系统，适合正式测评场景展示",
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800">
@@ -1145,7 +1345,7 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
           </div>
         </motion.div>
 
-        <Card className="rounded-[24px] md:rounded-[28px] border-white/60 bg-white/90 shadow-xl">
+        <Card className="rounded-[24px] border-white/60 bg-white/90 shadow-xl md:rounded-[28px]">
           <CardHeader className="space-y-4 pb-2">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -1153,7 +1353,11 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
                   {!started ? "开始测试" : isComplete ? "你的 16 型 BOSS 人格已完成判定" : `第 ${step + 1} 题 / ${questions.length}`}
                 </CardTitle>
                 <CardDescription className="mt-1 text-slate-600">
-                  {!started ? "先阅读测评说明后开始。该版本适合正式对外测试、活动页和客户体验页。" : isComplete ? "结果页展示的是正式版解释，可直接用于用户测评、客户展示与内部测试。" : "请选择最符合你的选项。题目已扩展为 36 道，分型会更稳定。"}
+                  {!started
+                    ? "先阅读测评说明后开始。该版本适合正式对外测试、活动页和客户体验页。"
+                    : isComplete
+                    ? "结果页展示的是正式版解释，可直接用于用户测评、客户展示与内部测试。"
+                    : "请选择最符合你的选项。"}
                 </CardDescription>
               </div>
               <div className="min-w-24 text-left sm:text-right">
@@ -1167,11 +1371,20 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
           <CardContent className="pt-4">
             <AnimatePresence mode="wait">
               {!started ? (
-                <motion.div key="cover" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -18 }} transition={{ duration: 0.2 }} className="space-y-5">
+                <motion.div
+                  key="cover"
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -18 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-5"
+                >
                   <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">BOSSTI Formal Edition</div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                          BOSSTI Formal Edition
+                        </div>
                         <h2 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl">测你是哪一型 BOSS</h2>
                         <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-800 sm:text-base">
                           这是一份基于 36 道题目的娱乐型管理风格评估。结果将从愿景/营收、控制/放权、戏剧/稳定、开干/开会四组维度，对你的管理偏好进行归类，并落入 16 种类型与 4 个派系之中。
@@ -1199,7 +1412,7 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
                     </div>
 
                     <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
-                      <Button onClick={() => setStarted(true)} className="rounded-2xl w-full sm:w-auto">
+                      <Button onClick={() => setStarted(true)} className="w-full rounded-2xl sm:w-auto">
                         开始测试
                       </Button>
                     </div>
@@ -1211,7 +1424,14 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
                   </div>
                 </motion.div>
               ) : !isComplete ? (
-                <motion.div key={currentQuestion.id} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.2 }} className="space-y-5">
+                <motion.div
+                  key={currentQuestion.id}
+                  initial={{ opacity: 0, x: 18 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -18 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-5"
+                >
                   <div>
                     <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">{currentQuestion.title}</h2>
                     <p className="mt-2 text-sm text-slate-600">{currentQuestion.subtitle}</p>
@@ -1224,40 +1444,67 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
                         <button
                           key={option.text}
                           onClick={() => selectOption(idx)}
-                          className={`group rounded-2xl border p-4 text-left transition-all ${active ? "border-slate-900 bg-slate-900 text-white shadow-lg" : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"}`}
+                          className={`group rounded-2xl border p-4 text-left transition-all ${
+                            active
+                              ? "border-slate-900 bg-slate-900 text-white shadow-lg"
+                              : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                          }`}
                         >
                           <div className="flex items-start justify-between gap-4">
-                            <div className="text-[15px] font-medium leading-6 sm:text-base sm:leading-7">{option.text}</div>
-                            <ArrowRight className={`mt-1 h-4 w-4 shrink-0 ${active ? "text-white" : "text-slate-400 group-hover:text-slate-700"}`} />
+                            <div className="text-[15px] font-medium leading-6 sm:text-base sm:leading-7">
+                              {option.text}
+                            </div>
+                            <ArrowRight
+                              className={`mt-1 h-4 w-4 shrink-0 ${
+                                active ? "text-white" : "text-slate-400 group-hover:text-slate-700"
+                              }`}
+                            />
                           </div>
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="flex items-center justify-between gap-3 pt-2">
-                    <Button variant="outline" className="rounded-2xl" disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <Button
+                      variant="outline"
+                      className="rounded-2xl"
+                      disabled={step === 0}
+                      onClick={() => setStep((s) => Math.max(0, s - 1))}
+                    >
                       上一题
                     </Button>
                     <div className="text-xs text-slate-500">请选择最符合你的真实倾向，无标准答案。</div>
                   </div>
                 </motion.div>
-              ) : (
-                <motion.div key="result" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+              ) : result && faction ? (
+                <motion.div
+                  key="result"
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-5"
+                >
                   <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-xl">
                     <div className="p-6">
-                      <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                          <div className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">BOSSTI 编号</div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+                            BOSSTI 编号
+                          </div>
                           <div className="mt-2 flex flex-wrap items-end gap-3">
                             <h2 className="text-3xl font-black text-slate-900 md:text-4xl">{result.title}</h2>
-                            <span className="rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{code}</span>
+                            <span className="rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">
+                              {code}
+                            </span>
                           </div>
                           <p className="mt-3 max-w-2xl text-base leading-7 text-slate-800">{result.tone}</p>
                         </div>
                         <div className="rounded-2xl bg-slate-900 px-4 py-3 text-white shadow-lg">
                           <div className="text-xs uppercase tracking-[0.2em] text-slate-300">匹配度</div>
-                          <div className="mt-1 flex items-center gap-2 text-lg font-bold"><Flame className="h-4 w-4" />{confidence}%</div>
+                          <div className="mt-1 flex items-center gap-2 text-lg font-bold">
+                            <Flame className="h-4 w-4" />
+                            {confidence}%
+                          </div>
                         </div>
                       </div>
 
@@ -1271,45 +1518,69 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
 
                       <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
                         {code.split("").map((letter) => (
-                          <div key={letter} className="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm sm:p-4">
+                          <div
+                            key={letter}
+                            className="rounded-2xl border border-slate-200 bg-white p-3 text-center shadow-sm sm:p-4"
+                          >
                             <div className="text-xl font-black text-slate-900 sm:text-2xl">{letter}</div>
-                            <div className="mt-1 text-sm text-slate-600">{axes[letter]}</div>
+                            <div className="mt-1 text-sm text-slate-600">{axes[letter as AxisKey]}</div>
                           </div>
                         ))}
                       </div>
 
                       <div
                         className="mt-6 rounded-2xl border p-5 shadow-sm"
-                        style={faction ? { backgroundColor: `${faction.colors.primary}12`, borderColor: `${faction.colors.primary}40` } : undefined}
+                        style={{
+                          backgroundColor: `${faction.colors.primary}12`,
+                          borderColor: `${faction.colors.primary}40`,
+                        }}
                       >
                         <div className="text-sm font-semibold text-slate-900">你的派系标志</div>
                         <div className="mt-4">
-                          <FactionLogoCard code={code} title={result.title} tone={result.tone} confidence={confidence} bossLook={bossLook} />
+                          <FactionLogoCard
+                            code={code}
+                            title={result.title}
+                            tone={result.tone}
+                            confidence={confidence}
+                            bossLook={bossLook}
+                          />
                         </div>
                       </div>
 
                       <div
                         className="mt-6 rounded-2xl border p-5 shadow-sm"
-                        style={faction ? { backgroundColor: `${faction.colors.primary}10`, borderColor: `${faction.colors.primary}40` } : undefined}
+                        style={{
+                          backgroundColor: `${faction.colors.primary}10`,
+                          borderColor: `${faction.colors.primary}40`,
+                        }}
                       >
                         <div className="text-sm font-semibold text-slate-900">你所属的派系</div>
                         <div className="mt-3 grid gap-4 md:grid-cols-[0.9fr_1.1fr] md:items-start">
-                          <div className="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm" style={faction ? { borderColor: `${faction.colors.primary}35` } : undefined}>
+                          <div
+                            className="rounded-2xl border bg-white p-4 shadow-sm"
+                            style={{ borderColor: `${faction.colors.primary}35` }}
+                          >
                             <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Faction</div>
-                            <div className="mt-2 text-2xl font-black text-slate-900">{factionMap[getFaction(code)]?.name}</div>
-                            <div className="mt-2 text-sm leading-7 text-slate-800">{factionMap[getFaction(code)]?.tone}</div>
+                            <div className="mt-2 text-2xl font-black text-slate-900">{faction.name}</div>
+                            <div className="mt-2 text-sm leading-7 text-slate-800">{faction.tone}</div>
                           </div>
-                          <div className="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm" style={faction ? { borderColor: `${faction.colors.primary}35` } : undefined}>
+                          <div
+                            className="rounded-2xl border bg-white p-4 shadow-sm"
+                            style={{ borderColor: `${faction.colors.primary}35` }}
+                          >
                             <div className="text-xs uppercase tracking-[0.18em] text-slate-500">派系标签</div>
                             <div className="mt-3 flex flex-wrap gap-2">
-                              {factionMap[getFaction(code)]?.tags.map((tag) => (
+                              {faction.tags.map((tag) => (
                                 <Badge key={tag} variant="secondary" className="rounded-full px-3 py-1 text-sm">
                                   {tag}
                                 </Badge>
                               ))}
                             </div>
-                            <div className="mt-4 rounded-xl p-3 text-sm leading-7 text-slate-900" style={faction ? { backgroundColor: `${faction.colors.primary}18` } : undefined}>
-                              {factionMap[getFaction(code)]?.slogan}
+                            <div
+                              className="mt-4 rounded-xl p-3 text-sm leading-7 text-slate-900"
+                              style={{ backgroundColor: `${faction.colors.primary}18` }}
+                            >
+                              {faction.slogan}
                             </div>
                           </div>
                         </div>
@@ -1323,7 +1594,12 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
                               <RadarChart data={radarData} outerRadius="72%">
                                 <PolarGrid />
                                 <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
-                                <Radar dataKey="value" fill="currentColor" fillOpacity={0.2} stroke="currentColor" className="text-slate-900" />
+                                <Radar
+                                  dataKey="value"
+                                  fill="#0f172a"
+                                  fillOpacity={0.2}
+                                  stroke="#0f172a"
+                                />
                               </RadarChart>
                             </ResponsiveContainer>
                           </div>
@@ -1350,17 +1626,25 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
                               {result.socialCopy}
                             </div>
                             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                              <Button onClick={copyResult} className="rounded-2xl w-full sm:w-auto">
+                              <Button onClick={copyResult} className="w-full rounded-2xl sm:w-auto">
                                 <Share2 className="mr-2 h-4 w-4" />
                                 {copied ? "已复制摘要" : "复制结果摘要"}
                               </Button>
-                              <Button variant="outline" onClick={restart} className="rounded-2xl w-full sm:w-auto">
-                                <RotateCcw className="mr-2 h-4 w-4" />
-                                重新测试
-                              </Button>
-                              <Button variant="outline" onClick={copyShareLink} className="rounded-2xl w-full sm:w-auto">
+                              <Button
+                                variant="outline"
+                                onClick={copyShareLink}
+                                className="w-full rounded-2xl sm:w-auto"
+                              >
                                 <Share2 className="mr-2 h-4 w-4" />
                                 {linkCopied ? "已复制链接" : "分享链接"}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={restart}
+                                className="w-full rounded-2xl sm:w-auto"
+                              >
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                重新测试
                               </Button>
                             </div>
                           </div>
@@ -1405,7 +1689,7 @@ ${result.guide.map((g, i) => `${i + 1}. ${g}`).join("\n")}
                     </div>
                   </div>
                 </motion.div>
-              )}
+              ) : null}
             </AnimatePresence>
           </CardContent>
         </Card>
