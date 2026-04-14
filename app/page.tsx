@@ -980,13 +980,13 @@ export default function BOSSTIApp() {
             <AnimatePresence mode="wait">
               {!started ? (
                 <motion.div
-                  key="cover"
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -18 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-5"
-                >
+  key="cover"
+  initial={{ opacity: 0, y: 18 }}
+  animate={{ opacity: 1, y: 0 }}
+  exit={{ opacity: 0, y: -18 }}
+  transition={{ duration: 0.2 }}
+  className="space-y-5"
+>
                   <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 md:rounded-[28px] md:p-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div>
