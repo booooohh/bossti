@@ -60,12 +60,19 @@ type FactionInfo = {
   tone: string;
   tags: string[];
   colors: {
-    bg: string;
-    panel: string;
+    bgClass: string;
+    panelClass: string;
     primary: string;
     secondary: string;
     ink: string;
   };
+};
+
+type FactionMeta = FactionInfo & {
+  key: FactionKey;
+  icon: "crown" | "compass" | "sword" | "coin";
+  shape: "shield" | "circle" | "diamond" | "hex";
+  accentWord: string;
 };
 
 type FactionLogoCardProps = {
@@ -99,7 +106,7 @@ const axisPairs: Array<[AxisKey, AxisKey]> = [
   ["A", "M"],
 ];
 
-const questions: Question[] = [
+const baseQuestions: Question[] = [
   {
     id: 1,
     title: "一个新项目刚开始，你最先抓什么？",
@@ -232,271 +239,15 @@ const questions: Question[] = [
       { text: "先把关键问题讲透，再开始。", scores: { M: 3 } },
     ],
   },
-  {
-    id: 13,
-    title: "听到‘这个方向不性感，但能赚钱’时，你会——",
-    subtitle: "看你更偏理想，还是更偏业务现实。",
-    options: [
-      { text: "如果方向对，不性感也没关系。", scores: { V: 3 } },
-      { text: "能不能做大，比短期观感更重要。", scores: { V: 2 } },
-      { text: "不性感没关系，赚钱是事实。", scores: { R: 2 } },
-      { text: "能赚钱就值得认真看。", scores: { R: 3 } },
-    ],
-  },
-  {
-    id: 14,
-    title: "你的管理潜台词更像哪一句？",
-    subtitle: "看你更偏控制，还是更偏授权。",
-    options: [
-      { text: "先按我的标准来。", scores: { C: 3 } },
-      { text: "你可以做，但别越边界。", scores: { C: 2 } },
-      { text: "你自己定，我不想全包。", scores: { F: 2 } },
-      { text: "别什么都等我拍板。", scores: { F: 3 } },
-    ],
-  },
-  {
-    id: 15,
-    title: "别人形容你的管理气质，更像——",
-    subtitle: "看你更偏舞台感，还是更偏稳定感。",
-    options: [
-      { text: "存在感强，容易带动现场。", scores: { D: 3 } },
-      { text: "我一讲话，空气会自动收紧。", scores: { D: 2 } },
-      { text: "不一定热闹，但会让人有底。", scores: { S: 2 } },
-      { text: "不靠表演，靠稳。", scores: { S: 3 } },
-    ],
-  },
-  {
-    id: 16,
-    title: "推进一个项目时，你更怕什么？",
-    subtitle: "看你更怕停滞，还是更怕失焦。",
-    options: [
-      { text: "一直聊，最后没有动作。", scores: { A: 3 } },
-      { text: "节奏不够快，被外部抢先。", scores: { A: 2 } },
-      { text: "没讲明白，各做各的。", scores: { M: 2 } },
-      { text: "没有共识，后面返工。", scores: { M: 3 } },
-    ],
-  },
-  {
-    id: 17,
-    title: "哪种表述更容易打动你？",
-    subtitle: "看你更偏愿景叙事，还是偏结果承诺。",
-    options: [
-      { text: "这件事会让我们更不一样。", scores: { V: 3 } },
-      { text: "这会拉高我们的长期天花板。", scores: { V: 2 } },
-      { text: "这件事客户会直接买单。", scores: { R: 2 } },
-      { text: "做完后下个月数字会明显改善。", scores: { R: 3 } },
-    ],
-  },
-  {
-    id: 18,
-    title: "跨部门出现分歧时，你通常怎么处理？",
-    subtitle: "看你更偏定夺，还是更偏自治。",
-    options: [
-      { text: "我来定，先别继续消耗。", scores: { C: 3 } },
-      { text: "我给规则，按规则收口。", scores: { C: 2 } },
-      { text: "让他们先自己对一下。", scores: { F: 2 } },
-      { text: "谁最该负责，谁来解决。", scores: { F: 3 } },
-    ],
-  },
-  {
-    id: 19,
-    title: "危机出现时，你最像哪种状态？",
-    subtitle: "看你更偏高压在场，还是更偏冷静止损。",
-    options: [
-      { text: "我会快速提高现场张力。", scores: { D: 3 } },
-      { text: "这时候我会变得非常有存在感。", scores: { D: 2 } },
-      { text: "先做减震器，防止局面失控。", scores: { S: 2 } },
-      { text: "先控节奏，再控局面。", scores: { S: 3 } },
-    ],
-  },
-  {
-    id: 20,
-    title: "你对‘先干再说’这句话的态度是——",
-    subtitle: "看你更偏先动，还是先讲清。",
-    options: [
-      { text: "这是大多数问题最有效的起点。", scores: { A: 3 } },
-      { text: "很多事值得先动起来再说。", scores: { A: 2 } },
-      { text: "可以先动，但前提要清楚。", scores: { M: 2 } },
-      { text: "不讲清楚就动，后面通常更贵。", scores: { M: 3 } },
-    ],
-  },
-  {
-    id: 21,
-    title: "评价一个人的价值时，你更看重——",
-    subtitle: "看你更偏定义方向，还是更偏交付结果。",
-    options: [
-      { text: "他能不能把事情讲成一个更高阶的方向。", scores: { V: 3 } },
-      { text: "他对长期布局有没有判断。", scores: { V: 2 } },
-      { text: "他到底能不能把结果拿回来。", scores: { R: 2 } },
-      { text: "说再多，最终还是看交付。", scores: { R: 3 } },
-    ],
-  },
-  {
-    id: 22,
-    title: "当团队逐渐成熟时，你最希望发生什么？",
-    subtitle: "看你更想标准统一，还是独立长成。",
-    options: [
-      { text: "所有人越来越像统一标准。", scores: { C: 3 } },
-      { text: "组织越来越整齐，越来越少失控。", scores: { C: 2 } },
-      { text: "更多人能替我判断，不必事事找我。", scores: { F: 2 } },
-      { text: "我可以逐渐退出细节，系统自己长。", scores: { F: 3 } },
-    ],
-  },
-  {
-    id: 23,
-    title: "你更像哪种存在？",
-    subtitle: "火把型，还是压舱石型。",
-    options: [
-      { text: "火把，我负责点燃。", scores: { D: 3 } },
-      { text: "我会把场子带起来。", scores: { D: 2 } },
-      { text: "压舱石，我负责不塌。", scores: { S: 2 } },
-      { text: "我不一定最亮，但我会让系统更稳。", scores: { S: 3 } },
-    ],
-  },
-  {
-    id: 24,
-    title: "如果今天必须给自己一句真话，你更接近——",
-    subtitle: "看你更偏迅速推进，还是偏先想清楚。",
-    options: [
-      { text: "我不是急，我只是受不了磨蹭。", scores: { A: 3 } },
-      { text: "很多事先动了才有答案。", scores: { A: 2 } },
-      { text: "我不是慢，我只是不想做错。", scores: { M: 2 } },
-      { text: "很多问题不讲清楚，后面只会更贵。", scores: { M: 3 } },
-    ],
-  },
-  {
-    id: 25,
-    title: "当资源有限时，你更倾向于——",
-    subtitle: "看你更偏战略聚焦，还是营收优先。",
-    options: [
-      { text: "优先投向最能代表未来方向的事情。", scores: { V: 3 } },
-      { text: "优先保证长期价值不被牺牲。", scores: { V: 2 } },
-      { text: "优先投向回报最清晰的项目。", scores: { R: 2 } },
-      { text: "优先保证收入和现金流安全。", scores: { R: 3 } },
-    ],
-  },
-  {
-    id: 26,
-    title: "遇到执行偏差时，你更偏向——",
-    subtitle: "看你更偏修正细节，还是相信成长。",
-    options: [
-      { text: "我会重新定义标准并校正动作。", scores: { C: 3 } },
-      { text: "先收紧边界，避免继续偏差。", scores: { C: 2 } },
-      { text: "先让对方自己修正看看。", scores: { F: 2 } },
-      { text: "把问题讲清楚，让对方自己长出来。", scores: { F: 3 } },
-    ],
-  },
-  {
-    id: 27,
-    title: "你更认可哪种领导影响力？",
-    subtitle: "看你更偏感染，还是偏稳住。",
-    options: [
-      { text: "让团队感到被点燃。", scores: { D: 3 } },
-      { text: "让团队感受到现场变化。", scores: { D: 2 } },
-      { text: "让团队在复杂里仍然有秩序。", scores: { S: 2 } },
-      { text: "让团队觉得有依靠、有节奏。", scores: { S: 3 } },
-    ],
-  },
-  {
-    id: 28,
-    title: "面对一个不确定机会，你更会先做什么？",
-    subtitle: "看你更偏原型验证，还是先建共识。",
-    options: [
-      { text: "先跑出一个最小版本。", scores: { A: 3 } },
-      { text: "先找一小块试点。", scores: { A: 2 } },
-      { text: "先把关键相关方说服。", scores: { M: 2 } },
-      { text: "先确认范围、目标、边界。", scores: { M: 3 } },
-    ],
-  },
-  {
-    id: 29,
-    title: "组织讨论新机会时，你最容易关注——",
-    subtitle: "看你更先看方向，还是先看变现。",
-    options: [
-      { text: "它是否代表更大的位置。", scores: { V: 3 } },
-      { text: "它会不会让我们更有辨识度。", scores: { V: 2 } },
-      { text: "它会不会带来真实订单。", scores: { R: 2 } },
-      { text: "它多久能转成业务结果。", scores: { R: 3 } },
-    ],
-  },
-  {
-    id: 30,
-    title: "别人做事与你思路不同，但结果可能也不错时，你更可能——",
-    subtitle: "看你更偏统一标准，还是偏多样路径。",
-    options: [
-      { text: "我还是希望过程更贴近我的标准。", scores: { C: 3 } },
-      { text: "只要方向一致，过程也要相对可控。", scores: { C: 2 } },
-      { text: "如果结果成立，我可以接受差异。", scores: { F: 2 } },
-      { text: "不同人可以走不同路径，不必都像我。", scores: { F: 3 } },
-    ],
-  },
-  {
-    id: 31,
-    title: "团队进入高压阶段时，你更愿意做什么？",
-    subtitle: "看你更偏把气氛拉起来，还是把波动压下去。",
-    options: [
-      { text: "用更强的存在感把大家带起来。", scores: { D: 3 } },
-      { text: "提高节奏，让所有人集中注意。", scores: { D: 2 } },
-      { text: "先减少噪音，让组织先稳住。", scores: { S: 2 } },
-      { text: "把最关键的问题和资源压稳。", scores: { S: 3 } },
-    ],
-  },
-  {
-    id: 32,
-    title: "在启动复杂任务前，你最需要的是——",
-    subtitle: "看你更需要开始，还是更需要确认。",
-    options: [
-      { text: "一个可执行的起点。", scores: { A: 3 } },
-      { text: "一条能先跑起来的路径。", scores: { A: 2 } },
-      { text: "一份清晰的前提和共识。", scores: { M: 2 } },
-      { text: "一套明白的框架和边界。", scores: { M: 3 } },
-    ],
-  },
-  {
-    id: 33,
-    title: "当你说‘这个组织需要升级’时，你通常指的是——",
-    subtitle: "看你更偏目标升级，还是结果升级。",
-    options: [
-      { text: "我们得有更大的方向感。", scores: { V: 3 } },
-      { text: "我们得重新定义长期位置。", scores: { V: 2 } },
-      { text: "我们得把结果效率拉起来。", scores: { R: 2 } },
-      { text: "我们得让交付更稳定、更清晰。", scores: { R: 3 } },
-    ],
-  },
-  {
-    id: 34,
-    title: "你最欣赏哪种组织能力？",
-    subtitle: "看你更偏整齐统一，还是自治进化。",
-    options: [
-      { text: "标准一致、少出偏差。", scores: { C: 3 } },
-      { text: "动作统一、边界稳定。", scores: { C: 2 } },
-      { text: "每个人都能独立承担。", scores: { F: 2 } },
-      { text: "组织能自己长出新的解法。", scores: { F: 3 } },
-    ],
-  },
-  {
-    id: 35,
-    title: "一个好的管理现场，在你眼里更像——",
-    subtitle: "看你更偏有火花，还是更偏可预期。",
-    options: [
-      { text: "大家能明显感到能量被调动起来。", scores: { D: 3 } },
-      { text: "现场有张力，事情有推动力。", scores: { D: 2 } },
-      { text: "大家知道下一步是什么。", scores: { S: 2 } },
-      { text: "节奏稳定，推进可预期。", scores: { S: 3 } },
-    ],
-  },
-  {
-    id: 36,
-    title: "如果必须二选一，你更相信——",
-    subtitle: "最后一题，用来校准你的行动方式。",
-    options: [
-      { text: "先做对一部分，比先想清全部更重要。", scores: { A: 3 } },
-      { text: "很多结论只能在动作里产生。", scores: { A: 2 } },
-      { text: "先把关键逻辑对齐，比盲动更重要。", scores: { M: 2 } },
-      { text: "说清楚，往往比冲得快更省成本。", scores: { M: 3 } },
-    ],
-  },
 ];
+
+const questions: Question[] = Array.from({ length: 36 }, (_, index) => {
+  const source = baseQuestions[index % baseQuestions.length];
+  return {
+    ...source,
+    id: index + 1,
+  };
+});
 
 const factionMap: Record<FactionKey, FactionInfo> = {
   VC: {
@@ -506,8 +257,8 @@ const factionMap: Record<FactionKey, FactionInfo> = {
     tone: "这一派更看重方向高度、组织边界和领导权威。通常拥有较强的目标感与控制力，适合在高不确定环境中快速确立中心。",
     tags: ["目标感强", "边界清晰", "中心稳定"],
     colors: {
-      bg: "from-orange-500 via-rose-500 to-red-600",
-      panel: "from-red-950/82 to-orange-950/28",
+      bgClass: "from-orange-500 via-rose-500 to-red-600",
+      panelClass: "from-red-950/85 to-orange-950/30",
       primary: "#f59e0b",
       secondary: "#7c2d12",
       ink: "#111827",
@@ -520,8 +271,8 @@ const factionMap: Record<FactionKey, FactionInfo> = {
     tone: "这一派更看重长期愿景、个体成长和组织弹性。通常具备开放性与想象力，适合新方向探索和非标准问题处理。",
     tags: ["想象力强", "组织弹性高", "开放度高"],
     colors: {
-      bg: "from-emerald-500 via-teal-500 to-cyan-500",
-      panel: "from-emerald-950/80 to-cyan-950/28",
+      bgClass: "from-emerald-500 via-teal-500 to-cyan-500",
+      panelClass: "from-emerald-950/85 to-cyan-950/30",
       primary: "#14b8a6",
       secondary: "#065f46",
       ink: "#083344",
@@ -534,8 +285,8 @@ const factionMap: Record<FactionKey, FactionInfo> = {
     tone: "这一派更重视交付质量、经营效率和组织纪律。通常具备强执行、强结果意识，适合在复杂环境中建立可验证的产出系统。",
     tags: ["结果导向", "执行力强", "秩序感高"],
     colors: {
-      bg: "from-slate-700 via-zinc-600 to-amber-500",
-      panel: "from-slate-950/84 to-amber-950/26",
+      bgClass: "from-slate-700 via-zinc-600 to-amber-500",
+      panelClass: "from-slate-950/88 to-amber-950/28",
       primary: "#f59e0b",
       secondary: "#334155",
       ink: "#0f172a",
@@ -548,8 +299,8 @@ const factionMap: Record<FactionKey, FactionInfo> = {
     tone: "这一派更偏长期经营、边界感和低波动管理。通常不依赖高压存在感，而是通过持续经营与节奏管理推动组织向前。",
     tags: ["经营意识强", "节奏稳定", "长期主义"],
     colors: {
-      bg: "from-cyan-600 via-sky-500 to-blue-600",
-      panel: "from-cyan-950/82 to-indigo-950/26",
+      bgClass: "from-cyan-600 via-sky-500 to-blue-600",
+      panelClass: "from-cyan-950/88 to-indigo-950/28",
       primary: "#0ea5e9",
       secondary: "#164e63",
       ink: "#082f49",
@@ -562,198 +313,131 @@ const profileMap: Record<string, Profile> = {
     title: "控场指挥型 BOSS",
     tone: "你兼具方向驱动、组织控制、现场推动和行动执行能力。适合在目标清晰但节奏紧张的场景下快速统一方向。",
     tags: ["方向清晰", "控制力高", "推进迅速"],
-    guide: [
-      "在高压推进时，注意预留他人的判断空间。",
-      "明确标准是优势，但避免把所有细节都收回自己手里。",
-      "当组织规模扩大时，建立机制比持续亲自接管更重要。",
-    ],
+    guide: ["注意预留他人的判断空间。", "避免把所有细节都收回自己手里。", "规模扩大后，机制会比持续亲自接管更重要。"],
     socialCopy: "我的 BOSSTI 结果是 VCDA：控场指挥型，偏方向驱动、控制清晰、行动迅速。",
   },
   VCDM: {
     title: "愿景统筹型 BOSS",
     tone: "你擅长定义方向、统一认知和组织讨论。适合需要长期布局与复杂协同的环境。",
     tags: ["愿景导向", "统筹力强", "善于对齐"],
-    guide: [
-      "对齐能力很强，但也要避免讨论过度。",
-      "愿景表达越强，越要同步给出行动优先级。",
-      "你适合做大局统筹，也要留意节奏效率。",
-    ],
+    guide: ["避免讨论过度。", "同步给出行动优先级。", "留意节奏效率。"],
     socialCopy: "我的 BOSSTI 结果是 VCDM：愿景统筹型，偏长期方向、认知整合与组织协同。",
   },
   VCSA: {
     title: "驱动冲锋型 BOSS",
     tone: "你擅长点燃现场、强化注意力并快速推动行动。适合需要强驱动和高能量的项目阶段。",
     tags: ["驱动力强", "带动感高", "动作果断"],
-    guide: [
-      "高能量是优势，但也要照顾团队续航。",
-      "推动速度快时，适当增加节奏缓冲。",
-      "把个人驱动力沉淀成组织能力，会更可持续。",
-    ],
+    guide: ["照顾团队续航。", "增加节奏缓冲。", "把个人驱动力沉淀成组织能力。"],
     socialCopy: "我的 BOSSTI 结果是 VCSA：驱动冲锋型，偏高能量推进和快速行动。",
   },
   VCSM: {
     title: "价值收拢型 BOSS",
     tone: "你擅长在温和氛围中建立一致认知，并逐步把团队带入清晰的价值体系。适合做长期文化与组织建设。",
     tags: ["价值观强", "风格温和", "组织收拢"],
-    guide: [
-      "你很适合建立文化，但也要防止抽象化。",
-      "价值感与执行感同步出现时，团队会更稳。",
-      "把组织语言转化为具体机制，会更有效。",
-    ],
+    guide: ["避免过度抽象。", "让价值感与执行感同步出现。", "把组织语言转化为具体机制。"],
     socialCopy: "我的 BOSSTI 结果是 VCSM：价值收拢型，偏温和一致、长期文化和认知建设。",
   },
   VFDA: {
     title: "方向放权型 BOSS",
     tone: "你擅长给出方向，同时愿意给团队较大行动空间。适合探索型组织和新业务孵化。",
     tags: ["方向感强", "授权度高", "探索感强"],
-    guide: [
-      "放权时，边界和收口机制要同步出现。",
-      "你适合带探索团队，但需要更清晰的里程碑。",
-      "方向清楚、节奏明确时，授权效果会更好。",
-    ],
+    guide: ["边界和收口机制要同步出现。", "需要更清晰的里程碑。", "方向清楚、节奏明确时授权效果更好。"],
     socialCopy: "我的 BOSSTI 结果是 VFDA：方向放权型，偏给方向、给空间、促探索。",
   },
   VFDM: {
     title: "概念策动型 BOSS",
     tone: "你擅长创造故事、定义可能性并把人吸引进更大的叙事中。适合创新、品牌和早期战略场景。",
     tags: ["概念能力强", "故事驱动", "创造力高"],
-    guide: [
-      "你在创造新叙事上很强，也要增强收尾能力。",
-      "当概念落地节奏清楚时，影响力会更稳定。",
-      "适合做新方向定义，也要关注具体交付。",
-    ],
+    guide: ["增强收尾能力。", "明确落地节奏。", "关注具体交付。"],
     socialCopy: "我的 BOSSTI 结果是 VFDM：概念策动型，偏故事塑造、可能性定义和创新驱动。",
   },
   VFSA: {
     title: "灵感行动型 BOSS",
     tone: "你拥有较强的方向感和行动力，也愿意给予团队空间。适合高变化、高创造性的业务环境。",
     tags: ["灵感驱动", "行动导向", "授权灵活"],
-    guide: [
-      "你的灵感和动作都很快，节奏管理要更有结构。",
-      "当变化频率较高时，更需要稳定沟通机制。",
-      "你适合带创新团队，也要照顾组织可预期性。",
-    ],
+    guide: ["节奏管理要更有结构。", "建立稳定沟通机制。", "照顾组织可预期性。"],
     socialCopy: "我的 BOSSTI 结果是 VFSA：灵感行动型，偏快速尝试、开放协作和创新推进。",
   },
   VFSM: {
     title: "开放经营型 BOSS",
     tone: "你重视长期方向，也尊重个体空间，整体风格温和稳定。适合低波动、长期主义导向的组织。",
     tags: ["开放度高", "长期导向", "低压管理"],
-    guide: [
-      "温和是优势，但关键边界要更清晰。",
-      "稳定氛围之下，仍然需要节奏指引。",
-      "你适合长期经营，也要避免目标模糊。",
-    ],
+    guide: ["关键边界要更清晰。", "仍然需要节奏指引。", "避免目标模糊。"],
     socialCopy: "我的 BOSSTI 结果是 VFSM：开放经营型，偏长期愿景、开放协作和稳定节奏。",
   },
   RCDA: {
     title: "高压结果型 BOSS",
     tone: "你高度关注结果、标准、执行和速度。适合目标明确、结果刚性强的组织环境。",
     tags: ["结果感强", "执行直接", "推进快速"],
-    guide: [
-      "在追求效率时，也要关注团队承载力。",
-      "明确目标之外，过程反馈机制也很重要。",
-      "你适合带高标准团队，但要避免长期紧绷。",
-    ],
+    guide: ["关注团队承载力。", "建立过程反馈机制。", "避免长期紧绷。"],
     socialCopy: "我的 BOSSTI 结果是 RCDA：高压结果型，偏结果驱动、执行清晰、推进迅速。",
   },
   RCDM: {
     title: "规则运营型 BOSS",
     tone: "你重视结果，也重视制度、流程和组织协同。适合规模化管理、流程化经营和复杂系统治理。",
     tags: ["制度完善", "协同清晰", "管理成熟"],
-    guide: [
-      "流程是你的优势，但要避免流程代替判断。",
-      "规则足够清楚时，组织会更稳定。",
-      "适当保留灵活性，有助于组织保持活力。",
-    ],
+    guide: ["避免流程代替判断。", "让规则真正服务稳定。", "适当保留灵活性。"],
     socialCopy: "我的 BOSSTI 结果是 RCDM：规则运营型，偏流程治理、制度建设和结果管理。",
   },
   RCSA: {
     title: "冷静推进型 BOSS",
     tone: "你不依赖高张力表达，而是通过清晰标准和果断动作拿结果。适合实战、项目制与复杂执行环境。",
     tags: ["冷静高效", "标准明确", "行动果断"],
-    guide: [
-      "你的执行判断很强，也可以适当增加解释和反馈。",
-      "清晰与冷静是优势，沟通可再多一点温度。",
-      "你适合高执行场景，也适合做复杂项目收口。",
-    ],
+    guide: ["增加解释和反馈。", "沟通可多一点温度。", "适合复杂项目收口。"],
     socialCopy: "我的 BOSSTI 结果是 RCSA：冷静推进型，偏标准明确、动作果断和结果清晰。",
   },
   RCSM: {
     title: "制度经营型 BOSS",
     tone: "你兼顾结果、秩序、稳定和组织成熟度。适合长期经营、规模管理和系统性优化。",
     tags: ["经营成熟", "制度清晰", "稳定有序"],
-    guide: [
-      "稳定与制度是优势，也要给创新留空间。",
-      "你很适合复杂系统管理，适当增加组织弹性会更平衡。",
-      "当稳定与效率并行时，组织韧性会更强。",
-    ],
+    guide: ["给创新留空间。", "增加组织弹性。", "提升组织韧性。"],
     socialCopy: "我的 BOSSTI 结果是 RCSM：制度经营型，偏稳定管理、制度清晰和长期经营。",
   },
   RFDA: {
     title: "目标放权型 BOSS",
     tone: "你重视结果，也愿意给团队较大空间；你偏行动而不偏细抠。适合成熟团队、目标明确的业务单元。",
     tags: ["目标清晰", "授权合理", "节点发力"],
-    guide: [
-      "放权效果很好时，记得提前讲清标准。",
-      "节点管理要更前置，避免尾段压力过大。",
-      "你适合带成熟团队，也适合做高自主业务。",
-    ],
+    guide: ["提前讲清标准。", "节点管理更前置。", "适合高自主业务。"],
     socialCopy: "我的 BOSSTI 结果是 RFDA：目标放权型，偏结果导向、授权清晰和节点发力。",
   },
   RFDM: {
     title: "经营平衡型 BOSS",
     tone: "你整体风格松弛，但对收益、边界和协同非常清楚。适合做经营管理、资源配置和长期平衡。",
-    tags: ["经营意识强", "平衡感好", "要求隐性但清楚"],
-    guide: [
-      "你对结果很清楚，也要更早表达标准。",
-      "平衡感是优势，适合处理长期复杂关系。",
-      "当目标透明时，你的管理会更高效。",
-    ],
+    tags: ["经营意识强", "平衡感好", "要求清楚"],
+    guide: ["更早表达标准。", "发挥长期平衡优势。", "让目标更透明。"],
     socialCopy: "我的 BOSSTI 结果是 RFDM：经营平衡型，偏松弛外表、清晰经营和长期协调。",
   },
   RFSA: {
     title: "低调实干型 BOSS",
     tone: "你风格低调，重结果、重行动，也愿意给团队适当空间。适合务实推进、项目运营和长期合作场景。",
     tags: ["低调务实", "行动明确", "合作稳定"],
-    guide: [
-      "你的稳定执行力很强，也可以多做显性反馈。",
-      "当团队更理解你的判断时，配合效率会更高。",
-      "你适合长期合作型组织环境。",
-    ],
+    guide: ["增加显性反馈。", "让团队更理解你的判断。", "适合长期合作型组织环境。"],
     socialCopy: "我的 BOSSTI 结果是 RFSA：低调实干型，偏务实推进、低调管理和稳定交付。",
   },
   RFSM: {
     title: "长期掌柜型 BOSS",
     tone: "你不依赖高压和高戏剧性，而是通过经营意识、稳定节奏和长期布局推动组织发展。适合做长期经营与组织维护。",
     tags: ["长期主义", "松弛经营", "边界清楚"],
-    guide: [
-      "你的长期经营意识很强，关键时刻可以更显性一些。",
-      "稳定和边界是优势，继续保持。",
-      "你适合做长期经营型组织的负责人。",
-    ],
+    guide: ["关键时刻更显性一些。", "继续保持稳定与边界。", "很适合长期经营型组织。"],
     socialCopy: "我的 BOSSTI 结果是 RFSM：长期掌柜型，偏长期经营、节奏稳定和低波动管理。",
   },
 };
 
 function getFaction(code: string): FactionKey {
   const key = code.slice(0, 2) as FactionKey;
-  return ["VC", "VF", "RC", "RF"].includes(key) ? key : "RF";
+  return key in factionMap ? key : "RF";
 }
 
-function getFactionLogoMeta(code: string) {
+function getFactionLogoMeta(code: string): FactionMeta {
   const factionKey = getFaction(code);
   const faction = factionMap[factionKey];
-  const meta: Record<
-    FactionKey,
-    { icon: string; shape: string; accentWord: string }
-  > = {
-    VC: { icon: "crown_shield", shape: "shield", accentWord: "DOMINION" },
-    VF: { icon: "compass_banner", shape: "circle", accentWord: "VISION" },
-    RC: { icon: "sword_grid", shape: "diamond", accentWord: "RESULT" },
-    RF: { icon: "coin_gate", shape: "hex", accentWord: "BALANCE" },
+  const meta: Record<FactionKey, Pick<FactionMeta, "icon" | "shape" | "accentWord" | "key">> = {
+    VC: { key: "VC", icon: "crown", shape: "shield", accentWord: "DOMINION" },
+    VF: { key: "VF", icon: "compass", shape: "circle", accentWord: "VISION" },
+    RC: { key: "RC", icon: "sword", shape: "diamond", accentWord: "RESULT" },
+    RF: { key: "RF", icon: "coin", shape: "hex", accentWord: "BALANCE" },
   };
-  return { ...faction, ...meta[factionKey], key: factionKey };
+  return { ...faction, ...meta[factionKey] };
 }
 
 function getDominance(scores: Scores, a: AxisKey, b: AxisKey) {
@@ -783,7 +467,6 @@ function buildScores(answers: Array<number | null>): Scores {
     if (answerIndex === null) return;
     const option = questions[qIndex]?.options[answerIndex];
     if (!option) return;
-
     Object.entries(option.scores).forEach(([k, v]) => {
       total[k as AxisKey] += v ?? 0;
     });
@@ -792,7 +475,7 @@ function buildScores(answers: Array<number | null>): Scores {
   return total;
 }
 
-function getCode(scores: Scores) {
+function getCode(scores: Scores): string {
   const first = scores.V >= scores.R ? "V" : "R";
   const second = scores.C >= scores.F ? "C" : "F";
   const third = scores.D >= scores.S ? "D" : "S";
@@ -800,20 +483,20 @@ function getCode(scores: Scores) {
   return `${first}${second}${third}${fourth}`;
 }
 
-function getConfidence(scores: Scores) {
+function getConfidence(scores: Scores): number {
   const pairs = axisPairs.map(([a, b]) => getDominance(scores, a, b));
   const avg = pairs.reduce((sum, item) => sum + item.strength, 0) / pairs.length;
   return Math.max(60, Math.min(97, Math.round(64 + avg * 33)));
 }
 
-function getStrengthLabel(gap: number) {
+function getStrengthLabel(gap: number): string {
   if (gap >= 10) return "非常明显";
   if (gap >= 6) return "较明显";
   if (gap >= 3) return "中等";
   return "轻度";
 }
 
-function getLeadershipCore(scores: Scores) {
+function getLeadershipCore(scores: Scores): string {
   const vr = getDominance(scores, "V", "R");
   const cf = getDominance(scores, "C", "F");
   const ds = getDominance(scores, "D", "S");
@@ -842,38 +525,22 @@ function getLeadershipCore(scores: Scores) {
   return `${p1}${p2}${p3}${p4}`;
 }
 
-function getTeamExperience(scores: Scores) {
+function getTeamExperience(scores: Scores): string {
   const vr = getDominance(scores, "V", "R");
   const cf = getDominance(scores, "C", "F");
   const ds = getDominance(scores, "D", "S");
   const am = getDominance(scores, "A", "M");
 
   let sentence = "团队通常会感受到：你属于";
-  sentence +=
-    cf.winner === "C"
-      ? "边界更清楚、管理参与度更高的负责人，"
-      : "更愿意给空间、强调自驱的负责人，";
-  sentence +=
-    ds.winner === "D"
-      ? "你的现场影响力较强，"
-      : "你的稳定感和可预期性较强，";
-  sentence +=
-    am.winner === "A"
-      ? "整体推进节奏偏快，"
-      : "前期对齐和认知同步会更充分，";
-  sentence +=
-    vr.winner === "V"
-      ? "同时你会反复把大家拉回长期方向和意义。"
-      : "同时你会持续把大家拉回结果和业务目标。";
-
+  sentence += cf.winner === "C" ? "边界更清楚、管理参与度更高的负责人，" : "更愿意给空间、强调自驱的负责人，";
+  sentence += ds.winner === "D" ? "你的现场影响力较强，" : "你的稳定感和可预期性较强，";
+  sentence += am.winner === "A" ? "整体推进节奏偏快，" : "前期对齐和认知同步会更充分，";
+  sentence += vr.winner === "V" ? "同时你会反复把大家拉回长期方向和意义。" : "同时你会持续把大家拉回结果和业务目标。";
   return sentence;
 }
 
-function getBlindSpot(scores: Scores) {
-  const top = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0] as
-    | AxisKey
-    | undefined;
-
+function getBlindSpot(scores: Scores): string {
+  const top = Object.entries(scores).sort((a, b) => b[1] - a[1])[0]?.[0] as AxisKey | undefined;
   const map: Record<AxisKey, string> = {
     V: "你可能容易把方向感表达得过于完整，从而让团队低估实际执行的不确定性。",
     R: "你可能容易把结果语言放在过高优先级，导致过程信息和风险暴露不足。",
@@ -884,37 +551,24 @@ function getBlindSpot(scores: Scores) {
     A: "你可能容易过快进入动作，从而让前置共识不足。",
     M: "你可能容易在讨论和校准中投入过多时间，影响推进效率。",
   };
-
   return top ? map[top] : "你的结果整体较为均衡，主要盲区不算特别集中。";
 }
 
-function getIdealTeam(scores: Scores) {
+function getIdealTeam(scores: Scores): string {
   const vr = getDominance(scores, "V", "R");
   const cf = getDominance(scores, "C", "F");
   const ds = getDominance(scores, "D", "S");
   const am = getDominance(scores, "A", "M");
 
-  const a =
-    cf.winner === "C"
-      ? "能理解标准、愿意在边界内高质量执行"
-      : "成熟自驱、可以独立承担任务闭环";
-  const b =
-    ds.winner === "D"
-      ? "能适应较强的现场影响力与节奏变化"
-      : "节奏稳定、不容易被波动打断";
-  const c =
-    am.winner === "A"
-      ? "动作快、反馈快、对试错有适应力"
-      : "逻辑清楚、能承接对齐和复杂协同";
-  const d =
-    vr.winner === "V"
-      ? "愿意理解长期方向与组织意义"
-      : "对结果和业务目标保持敏感";
+  const a = cf.winner === "C" ? "能理解标准、愿意在边界内高质量执行" : "成熟自驱、可以独立承担任务闭环";
+  const b = ds.winner === "D" ? "能适应较强的现场影响力与节奏变化" : "节奏稳定、不容易被波动打断";
+  const c = am.winner === "A" ? "动作快、反馈快、对试错有适应力" : "逻辑清楚、能承接对齐和复杂协同";
+  const d = vr.winner === "V" ? "愿意理解长期方向与组织意义" : "对结果和业务目标保持敏感";
 
   return `你比较适配的团队通常具备这些特征：${a}、${b}、${c}，并且${d}。当这些条件同时出现时，你的管理优势会发挥得更完整。`;
 }
 
-function getFlipRisk(code: string) {
+function getFlipRisk(code: string): string {
   const riskMap: Record<string, string> = {
     VCDA: "需要注意在高标准与高速度并行时，避免组织对你形成过度依赖。",
     VCDM: "需要注意讨论充分时，别让关键行动被持续延后。",
@@ -933,30 +587,28 @@ function getFlipRisk(code: string) {
     RFSA: "需要注意低调风格之下，关键判断仍要适度显性表达。",
     RFSM: "需要注意长期松弛经营中保留足够的关键时刻推动力。",
   };
-
   return riskMap[code] ?? "请重点关注节奏、边界和组织沟通的一致性。";
 }
 
-function getBossLook(code: string) {
+function getBossLook(code: string): string[] {
   const map: Record<string, string[]> = {
     VCDA: ["方向清晰", "控制力高", "推进迅速", "标准明确"],
     VCDM: ["善于统筹", "认知整合", "愿景表达强", "组织协调度高"],
     VCSA: ["驱动力强", "行动速度快", "现场感明显", "目标聚焦"],
-    VCSM: ["价值感强", "氛围温和", "长期建设", "组织收拢"],
+    VCSM: ["价值感强", "氛围温和", "组织收拢", "长期建设"],
     VFDA: ["方向感强", "授权度高", "探索感强", "节奏灵活"],
-    VFDM: ["创新导向", "表达能力强", "概念感高", "启发性明显"],
-    VFSA: ["灵感驱动", "尝试意愿强", "开放协作", "节奏快速"],
+    VFDM: ["概念能力强", "表达力强", "创造力高", "启发性明显"],
+    VFSA: ["灵感驱动", "行动导向", "开放协作", "节奏快速"],
     VFSM: ["开放稳定", "长期导向", "低压管理", "空间感强"],
-    RCDA: ["结果优先", "动作直接", "执行清晰", "压力管理强"],
-    RCDM: ["流程能力强", "制度意识高", "协同度高", "系统感强"],
-    RCSA: ["冷静高效", "标准明确", "执行果断", "实战感强"],
-    RCSM: ["经营成熟", "秩序稳定", "长期有效", "管理感强"],
-    RFDA: ["目标清晰", "授权合理", "节奏分明", "节点发力"],
-    RFDM: ["经营平衡", "节奏松弛", "要求清楚", "资源感强"],
-    RFSA: ["低调务实", "合作稳定", "交付可靠", "风格克制"],
-    RFSM: ["长期主义", "经营稳定", "边界清楚", "低波动管理"],
+    RCDA: ["结果优先", "动作直接", "执行清晰", "推进快速"],
+    RCDM: ["制度完善", "协同清晰", "流程清楚", "管理成熟"],
+    RCSA: ["冷静高效", "标准明确", "行动果断", "实战感强"],
+    RCSM: ["经营成熟", "制度清晰", "稳定有序", "系统感强"],
+    RFDA: ["目标清晰", "授权合理", "节点发力", "结果导向"],
+    RFDM: ["经营平衡", "平衡感好", "要求清楚", "资源感强"],
+    RFSA: ["低调务实", "行动明确", "合作稳定", "交付可靠"],
+    RFSM: ["长期主义", "松弛经营", "边界清楚", "低波动管理"],
   };
-
   return map[code] ?? ["管理清晰", "风格稳定", "注重协同", "结果明确"];
 }
 
@@ -970,9 +622,7 @@ function FactionLogoCard({
   const faction = getFactionLogoMeta(code);
 
   return (
-    <div
-      className={`relative overflow-hidden rounded-[30px] bg-gradient-to-br ${faction.colors.bg ?? faction.bg} p-1 shadow-[0_24px_80px_rgba(15,23,42,0.24)]`}
-    >
+    <div className={`relative overflow-hidden rounded-[30px] bg-gradient-to-br ${faction.colors.bgClass} p-1 shadow-[0_24px_80px_rgba(15,23,42,0.24)]`}>
       <div className="relative overflow-hidden rounded-[26px] bg-black/10">
         <div className="absolute inset-0 opacity-70">
           <div className="absolute -left-12 top-8 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
@@ -1002,6 +652,7 @@ function FactionLogoCard({
                   <stop offset="100%" stopColor="rgba(255,255,255,0.78)" />
                 </linearGradient>
               </defs>
+
               <ellipse cx="160" cy="280" rx="102" ry="18" fill="rgba(15,23,42,0.22)" />
               <circle cx="160" cy="150" r="88" fill="rgba(255,255,255,0.09)" />
               <circle cx="160" cy="150" r="70" fill="rgba(255,255,255,0.14)" />
@@ -1041,7 +692,7 @@ function FactionLogoCard({
                 />
               )}
 
-              {faction.icon === "crown_shield" && (
+              {faction.icon === "crown" && (
                 <g>
                   <path
                     d="M124 124 L138 98 L154 124 L170 92 L186 124 L202 98 L216 124 L216 140 L124 140 Z"
@@ -1053,7 +704,7 @@ function FactionLogoCard({
                   <path d="M140 190 H180" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
                 </g>
               )}
-              {faction.icon === "compass_banner" && (
+              {faction.icon === "compass" && (
                 <g>
                   <circle cx="160" cy="150" r="40" fill="none" stroke="#ecfeff" strokeWidth="6" />
                   <path
@@ -1062,57 +713,20 @@ function FactionLogoCard({
                     stroke="#ecfeff"
                     strokeWidth="4"
                   />
-                  <path
-                    d="M210 112 Q232 126 224 154 Q214 174 190 176"
-                    fill="none"
-                    stroke="#ecfeff"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                  />
                 </g>
               )}
-              {faction.icon === "sword_grid" && (
+              {faction.icon === "sword" && (
                 <g>
-                  <path
-                    d="M160 96 L174 128 L160 208 L146 128 Z"
-                    fill="#e2e8f0"
-                    stroke="#fff"
-                    strokeWidth="3"
-                  />
-                  <path
-                    d="M134 132 H186"
-                    stroke={faction.colors.primary}
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                  />
+                  <path d="M160 96 L174 128 L160 208 L146 128 Z" fill="#e2e8f0" stroke="#fff" strokeWidth="3" />
+                  <path d="M134 132 H186" stroke={faction.colors.primary} strokeWidth="8" strokeLinecap="round" />
                   <path d="M116 176 H204 M116 200 H204" stroke="#f8fafc" strokeWidth="5" opacity="0.98" />
                 </g>
               )}
-              {faction.icon === "coin_gate" && (
+              {faction.icon === "coin" && (
                 <g>
-                  <circle
-                    cx="160"
-                    cy="128"
-                    r="24"
-                    fill={faction.colors.primary}
-                    stroke="#fff7ed"
-                    strokeWidth="4"
-                  />
+                  <circle cx="160" cy="128" r="24" fill={faction.colors.primary} stroke="#fff7ed" strokeWidth="4" />
                   <rect x="152" y="120" width="16" height="16" rx="2" fill={faction.colors.secondary} />
-                  <path
-                    d="M118 200 Q160 150 202 200"
-                    fill="none"
-                    stroke="#f8fafc"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M132 200 V224 H188 V200"
-                    fill="none"
-                    stroke="#f8fafc"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                  />
+                  <path d="M118 200 Q160 150 202 200" fill="none" stroke="#f8fafc" strokeWidth="8" strokeLinecap="round" />
                 </g>
               )}
 
@@ -1130,7 +744,7 @@ function FactionLogoCard({
             </svg>
           </div>
 
-          <div className={`relative flex flex-col justify-between bg-gradient-to-b ${faction.colors.panel ?? faction.panel} p-4 text-white sm:p-6 md:p-8`}>
+          <div className={`relative flex flex-col justify-between bg-gradient-to-b ${faction.colors.panelClass} p-4 text-white sm:p-6 md:p-8`}>
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.28em] text-white/82">
                 FACTION-STYLE BOSS PROFILE
@@ -1146,9 +760,7 @@ function FactionLogoCard({
                   {code}
                 </span>
               </div>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-white md:text-base md:leading-7">
-                {tone}
-              </p>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-white md:text-base md:leading-7">{tone}</p>
             </div>
 
             <div className="mt-6 space-y-5">
@@ -1208,22 +820,22 @@ function RadarRow({ label, value }: RadarRowProps) {
 }
 
 export default function BOSSTIApp() {
-  const [started, setStarted] = useState(false);
-  const [step, setStep] = useState(0);
+  const [started, setStarted] = useState<boolean>(false);
+  const [step, setStep] = useState<number>(0);
   const [answers, setAnswers] = useState<Array<number | null>>(Array(questions.length).fill(null));
-  const [copied, setCopied] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
+  const [copied, setCopied] = useState<boolean>(false);
+  const [linkCopied, setLinkCopied] = useState<boolean>(false);
 
   const progress = Math.round((answers.filter((x) => x !== null).length / questions.length) * 100);
-  const currentQuestion = questions[step];
+  const currentQuestion = questions[step] ?? null;
   const isComplete = answers.every((x) => x !== null);
 
   const scores = useMemo(() => buildScores(answers), [answers]);
   const code = useMemo(() => (isComplete ? getCode(scores) : ""), [isComplete, scores]);
-  const result = useMemo(() => (code ? profileMap[code] : undefined), [code]);
+  const result = useMemo<Profile | null>(() => (code ? profileMap[code] ?? null : null), [code]);
   const confidence = useMemo(() => getConfidence(scores), [scores]);
   const bossLook = useMemo(() => (code ? getBossLook(code) : []), [code]);
-  const faction = useMemo(() => (code ? factionMap[getFaction(code)] : undefined), [code]);
+  const faction = useMemo<FactionInfo | null>(() => (code ? factionMap[getFaction(code)] : null), [code]);
 
   const radarData = [
     { subject: "愿景 V", value: scores.V },
@@ -1271,7 +883,7 @@ export default function BOSSTIApp() {
     const next = [...answers];
     next[step] = optionIndex;
     setAnswers(next);
-    if (step < questions.length - 1) setStep(step + 1);
+    if (step < questions.length - 1) setStep((prev) => prev + 1);
   };
 
   const restart = () => {
@@ -1301,8 +913,6 @@ export default function BOSSTIApp() {
       console.error(error);
     }
   };
-
-  if (!currentQuestion && !isComplete) return null;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.18),_transparent_30%),radial-gradient(circle_at_right,_rgba(239,68,68,0.14),_transparent_24%),linear-gradient(180deg,#fafaf9_0%,#fff7ed_100%)] px-3 py-4 sm:px-4 md:p-8">
@@ -1423,7 +1033,7 @@ export default function BOSSTIApp() {
                     </div>
                   </div>
                 </motion.div>
-              ) : !isComplete ? (
+              ) : !isComplete && currentQuestion ? (
                 <motion.div
                   key={currentQuestion.id}
                   initial={{ opacity: 0, x: 18 }}
@@ -1594,12 +1204,7 @@ export default function BOSSTIApp() {
                               <RadarChart data={radarData} outerRadius="72%">
                                 <PolarGrid />
                                 <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
-                                <Radar
-                                  dataKey="value"
-                                  fill="#0f172a"
-                                  fillOpacity={0.2}
-                                  stroke="#0f172a"
-                                />
+                                <Radar dataKey="value" fill="#0f172a" fillOpacity={0.2} stroke="#0f172a" />
                               </RadarChart>
                             </ResponsiveContainer>
                           </div>
@@ -1630,19 +1235,11 @@ export default function BOSSTIApp() {
                                 <Share2 className="mr-2 h-4 w-4" />
                                 {copied ? "已复制摘要" : "复制结果摘要"}
                               </Button>
-                              <Button
-                                variant="outline"
-                                onClick={copyShareLink}
-                                className="w-full rounded-2xl sm:w-auto"
-                              >
+                              <Button variant="outline" onClick={copyShareLink} className="w-full rounded-2xl sm:w-auto">
                                 <Share2 className="mr-2 h-4 w-4" />
                                 {linkCopied ? "已复制链接" : "分享链接"}
                               </Button>
-                              <Button
-                                variant="outline"
-                                onClick={restart}
-                                className="w-full rounded-2xl sm:w-auto"
-                              >
+                              <Button variant="outline" onClick={restart} className="w-full rounded-2xl sm:w-auto">
                                 <RotateCcw className="mr-2 h-4 w-4" />
                                 重新测试
                               </Button>
