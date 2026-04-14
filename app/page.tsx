@@ -683,55 +683,121 @@ function FactionLogoCard({
 
         <CardContent className="pt-4">
           {!started ? (
-            <div className="space-y-5">
-              <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 md:rounded-[28px] md:p-6">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                      BOSSTI Formal Edition
-                    </div>
-                    <h2 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl">测你是哪一型 BOSS</h2>
-                    <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-800 sm:text-base">
-                      这是一份基于 36 道题目的娱乐型管理风格评估。结果将从愿景/营收、控制/放权、戏剧/稳定、开干/开会四组维度，对你的管理偏好进行归类，并落入 16 种类型与 4 个派系之中。
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-900 px-4 py-3 text-white shadow-lg">
-                    <div className="text-xs uppercase tracking-[0.2em] text-slate-300">测评结构</div>
-                    <div className="mt-1 text-lg font-bold">36 题 / 16 型 / 4 派系</div>
-                  </div>
-                </div>
+  <>
+    <div className="block md:hidden">
+      <div className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+          BOSSTI
+        </div>
+        <h2 className="mt-2 text-2xl font-black text-slate-900">
+          测你是哪一型 BOSS
+        </h2>
+        <p className="mt-3 text-sm leading-7 text-slate-700">
+          这是一个 36 题的娱乐型管理风格评估。请选择最符合你的真实倾向，
+          全程无标准答案，通常 3–5 分钟可完成。
+        </p>
 
-                <div className="mt-5 grid gap-4 md:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="text-sm font-semibold text-slate-900">适用对象</div>
-                    <p className="mt-2 text-sm leading-7 text-slate-800">
-                      适合创业者、管理者、团队负责人、业务合伙人，以及想从更客观视角了解自己管理风格的用户。也适合品牌活动页、客户互动页和团队内部娱乐式评估场景。
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="text-sm font-semibold text-slate-900">免责声明</div>
-                    <p className="mt-2 text-sm leading-7 text-slate-800">
-                      本测评用于娱乐化自我观察与风格识别，不构成心理诊断、能力认证或正式人事评估结论。结果会受到答题状态、语境与个人经历影响，请结合实际情况理解。
-                    </p>
-                  </div>
-                </div>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+            36 道题
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+            16 型
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+            4 派系
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+            正式版结果页
+          </div>
+        </div>
 
-                <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
-                  <Button
-                    onClick={() => setStarted(true)}
-                    className="w-full rounded-2xl bg-slate-900 text-white hover:bg-slate-800 sm:w-auto"
-                  >
-                    开始测试
-                  </Button>
-                </div>
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-sm font-semibold text-slate-900">适用对象</div>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
+            适合创业者、管理者、团队负责人，以及想从更客观视角认识自己管理风格的用户。
+          </p>
+        </div>
 
-                <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs leading-6 text-slate-500">
-                  <div>给我的朋友做的娱乐评估，从客观角度认识一下自己</div>
-                  <div>乌鲁木齐将予合信息科技服务有限公司——老王</div>
-                </div>
-              </div>
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-sm font-semibold text-slate-900">免责声明</div>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
+            本测评用于娱乐化自我观察与风格识别，不构成心理诊断、能力认证或正式人事评估结论。
+          </p>
+        </div>
+
+        <div className="mt-5">
+          <Button
+            onClick={() => setStarted(true)}
+            className="w-full rounded-2xl bg-slate-900 text-white hover:bg-slate-800"
+          >
+            开始测试
+          </Button>
+        </div>
+
+        <div className="mt-5 border-t border-slate-200 pt-4 text-center text-xs leading-6 text-slate-500">
+          <div>给我的朋友做的娱乐评估，从客观角度认识一下自己</div>
+          <div>乌鲁木齐将予合信息科技服务有限公司——老王</div>
+        </div>
+      </div>
+    </div>
+
+    <div className="hidden md:block space-y-5">
+      <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 md:rounded-[28px] md:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+              BOSSTI Formal Edition
             </div>
-          ) : !isComplete && currentQuestion ? (
+            <h2 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl">
+              测你是哪一型 BOSS
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-800 sm:text-base">
+              这是一份基于 36 道题目的娱乐型管理风格评估。结果将从愿景/营收、
+              控制/放权、戏剧/稳定、开干/开会四组维度，对你的管理偏好进行归类，
+              并落入 16 种类型与 4 个派系之中。
+            </p>
+          </div>
+          <div className="rounded-2xl bg-slate-900 px-4 py-3 text-white shadow-lg">
+            <div className="text-xs uppercase tracking-[0.2em] text-slate-300">
+              测评结构
+            </div>
+            <div className="mt-1 text-lg font-bold">36 题 / 16 型 / 4 派系</div>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="text-sm font-semibold text-slate-900">适用对象</div>
+            <p className="mt-2 text-sm leading-7 text-slate-800">
+              适合创业者、管理者、团队负责人、业务合伙人，以及想从更客观视角了解自己管理风格的用户。也适合品牌活动页、客户互动页和团队内部娱乐式评估场景。
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="text-sm font-semibold text-slate-900">免责声明</div>
+            <p className="mt-2 text-sm leading-7 text-slate-800">
+              本测评用于娱乐化自我观察与风格识别，不构成心理诊断、能力认证或正式人事评估结论。结果会受到答题状态、语境与个人经历影响，请结合实际情况理解。
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
+          <Button
+            onClick={() => setStarted(true)}
+            className="w-full rounded-2xl bg-slate-900 text-white hover:bg-slate-800 sm:w-auto"
+          >
+            开始测试
+          </Button>
+        </div>
+
+        <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs leading-6 text-slate-500">
+          <div>给我的朋友做的娱乐评估，从客观角度认识一下自己</div>
+          <div>乌鲁木齐将予合信息科技服务有限公司——老王</div>
+        </div>
+      </div>
+    </div>
+  </>
+) : !isComplete && currentQuestion ? (
             <div className="space-y-5">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">{currentQuestion.title}</h2>
