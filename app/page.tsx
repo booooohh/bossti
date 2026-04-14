@@ -1081,7 +1081,10 @@ export default function BOSSTIApp() {
 
                     <div className="mt-5">
                       <Button
-                        onClick={() => setStarted(true)}
+                        onClick={() => {
+  alert("clicked");
+  setStarted(true);
+}}
                         className="w-full rounded-2xl bg-slate-900 text-white hover:bg-slate-800"
                         style={{ backgroundColor: "#0f172a", color: "#ffffff" }}
                       >
@@ -1135,7 +1138,10 @@ export default function BOSSTIApp() {
 
                     <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
                       <Button
-                        onClick={() => setStarted(true)}
+                        onClick={() => {
+  alert("clicked");
+  setStarted(true);
+}}
                         className="w-full rounded-2xl bg-slate-900 text-white hover:bg-slate-800 sm:w-auto"
                         style={{ backgroundColor: "#0f172a", color: "#ffffff" }}
                       >
