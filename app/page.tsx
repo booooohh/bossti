@@ -913,13 +913,13 @@ export default function BOSSTIApp() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.18),_transparent_30%),radial-gradient(circle_at_right,_rgba(239,68,68,0.14),_transparent_24%),linear-gradient(180deg,#fafaf9_0%,#fff7ed_100%)] px-3 py-4 sm:px-4 md:p-8">
-      <div className="mx-auto max-w-5xl space-y-4 md:space-y-6">
+    <div className="min-h-dvh w-full overflow-x-hidden bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.18),_transparent_30%),radial-gradient(circle_at_right,_rgba(239,68,68,0.14),_transparent_24%),linear-gradient(180deg,#fafaf9_0%,#fff7ed_100%)] px-3 py-4 sm:px-4 md:p-8">
+      <div className="mx-auto w-full max-w-5xl space-y-4 md:space-y-6">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-[28px] border border-white/60 bg-white/90 p-6 shadow-xl backdrop-blur"
-        >
+  initial={{ opacity: 0, y: 16 }}
+  animate={{ opacity: 1, y: 0 }}
+  className="hidden rounded-[28px] border border-white/60 bg-white/90 p-6 shadow-xl backdrop-blur md:block"
+>
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg">
               <Crown className="h-6 w-6" />
@@ -987,7 +987,7 @@ export default function BOSSTIApp() {
                   transition={{ duration: 0.2 }}
                   className="space-y-5"
                 >
-                  <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+                  <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 md:rounded-[28px] md:p-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div>
                         <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
@@ -1020,9 +1020,12 @@ export default function BOSSTIApp() {
                     </div>
 
                     <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
-                      <Button onClick={() => setStarted(true)} className="w-full rounded-2xl sm:w-auto">
-                        开始测试
-                      </Button>
+                      <Button
+  onClick={() => setStarted(true)}
+  className="w-full rounded-2xl bg-slate-900 text-white hover:bg-slate-800 sm:w-auto"
+>
+  开始测试
+</Button>
                     </div>
 
                     <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs leading-6 text-slate-500">
@@ -1229,7 +1232,10 @@ export default function BOSSTIApp() {
                               {result.socialCopy}
                             </div>
                             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                              <Button onClick={copyResult} className="w-full rounded-2xl sm:w-auto">
+                              <Button
+  onClick={copyResult}
+  className="w-full rounded-2xl bg-slate-900 text-white hover:bg-slate-800 sm:w-auto"
+>
                                 <Share2 className="mr-2 h-4 w-4" />
                                 {copied ? "已复制摘要" : "复制结果摘要"}
                               </Button>
