@@ -962,7 +962,7 @@ export default function BOSSTIApp() {
                 </CardTitle>
                 <CardDescription className="mt-1 text-slate-600">
                   {!started
-                    ? "先阅读测评说明后开始。该版本适合正式对外测试、活动页和客户体验页。"
+                    ? "先阅读测评说明后开始。"
                     : isComplete
                     ? "结果页展示的是正式版解释，可直接用于用户测评、客户展示与内部测试。"
                     : "请选择最符合你的选项。"}
